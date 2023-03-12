@@ -2,11 +2,11 @@ import streamlit as st
 import tensorflow as tf
 from sklearn.preprocessing import MultiLabelBinarizer
 import numpy as np
-import boto3
-import io
-import pyaudio
-from contextlib import closing
-import os
+# import boto3
+# import io
+# import pyaudio
+# from contextlib import closing
+# import os
 
 @st.cache(allow_output_mutation=True)
 def load_model():
