@@ -4,6 +4,8 @@ from sklearn.preprocessing import MultiLabelBinarizer
 import numpy as np
 # import boto3
 # import io
+from PIL import Image
+import webcolors
 # import pyaudio
 # from contextlib import closing
 # import os
@@ -72,12 +74,33 @@ list_y = [[], ['Filled'], ['Foam'], ['Foam', 'Filled'],
 list_y_prop = [[], ['Opaque'], ['SemiTrans'],['SemiTrans', 'Opaque'] ,['Transparent'] ,['Transparent', 'DisturbeView'],['VesselInsideVessel', 'Opaque'],['VesselInsideVessel', 'SemiTrans'],['VesselInsideVessel', 'Transparent']]
 
 def predictions(uploaded_file, h5_loaded_model, h5_loaded_model_prop):
+    text_labels = None
+    text_labels_prop = None
     pred = np.nan
     pred_prop = np.nan
     st.image(uploaded_file, caption='Uploaded Image')
     img = tf.keras.preprocessing.image.load_img(uploaded_file, target_size=(224, 224))
     img = tf.keras.preprocessing.image.img_to_array(img)
     img = img / 255.0
+    # image = Image.fromarray(img)
+    # # create a boto3 client for the rekognition service
+    # rekognition_client = boto3.client('rekognition', 
+    #                                  AWS_ACCESS_KEY_ID="AKIAQFHL5JQLK77ASDF3",
+    #                                  AWS_SECRET_ACCESS_KEY="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")
+
+    # st.write(rekognition_client)
+    # # convert the PIL Image object to bytes
+    # with io.BytesIO() as output:
+    #     image.save(output, format='JPEG')
+    #     image_bytes = output.getvalue()
+
+    # # use the rekognition client to detect colors in the image bytes
+    # response = rekognition_client.detect_labels(
+    #     Image={'Bytes': image_bytes},
+    #     MaxLabels=10,
+    #     MinConfidence=90,
+    #     DetectColors=True
+    #     )   
     img = img.reshape(1, 224, 224, 3)
 
     pred = h5_loaded_model.predict(img)
@@ -88,7 +111,7 @@ def predictions(uploaded_file, h5_loaded_model, h5_loaded_model_prop):
     pred_prop = h5_loaded_model_prop.predict(img)
     # print(pred_prop)
     # st.write(pred_prop)
-    pred_prop = (pred_prop > 0.3).astype(int)
+    pred_prop = (pred_prop > 0.5).astype(int)
     mlb_prop = MultiLabelBinarizer()
     mlb_prop.fit(list_y_prop)
 
@@ -96,15 +119,22 @@ def predictions(uploaded_file, h5_loaded_model, h5_loaded_model_prop):
     text_labels_prop = mlb_prop.inverse_transform(pred_prop)
     if len(text_labels[0]) == 0 and len(text_labels_prop[0]) == 0:
         st.write('No labels found')
+    # colors = response['ColorLabels']
+
+   
+    # for color in colors:
+    #     st.write(f'Color: {color["Name"]}')
     for label in text_labels[0]:
         st.write(f'- {label}')
     for label in text_labels_prop[0]:
         st.write(f'- {label}')
 
-def main():
-    st.set_page_config(page_title='Image Uploader', page_icon=':camera:')
+    
 
-    st.title('Image Uploader')
+def main():
+    st.set_page_config(page_title='What is this? (Chem Lab)', page_icon=':camera:')
+
+    st.title('What is this? (Chem Lab)')
 
     uploaded_file = st.file_uploader('Choose an image file', type=['jpg', 'jpeg', 'png'])
     h5_loaded_model =  load_model()
