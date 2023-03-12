@@ -2,6 +2,11 @@ import streamlit as st
 import tensorflow as tf
 from sklearn.preprocessing import MultiLabelBinarizer
 import numpy as np
+import boto3
+import io
+import pyaudio
+from contextlib import closing
+import os
 
 @st.cache(allow_output_mutation=True)
 def load_model():
@@ -95,6 +100,17 @@ def predictions(uploaded_file, h5_loaded_model, h5_loaded_model_prop):
         st.write(f'- {label}')
     for label in text_labels_prop[0]:
         st.write(f'- {label}')
+
+    polly = boto3.client('polly', region_name='us-east-1')
+    text = "Your file has been uploaded!"
+    voice_id = 'Raveena'
+    output_format = 'pcm'
+    response = polly.synthesize_speech(Text=text, VoiceId=voice_id, OutputFormat=output_format)
+    audio_bytes = response['AudioStream'].read()
+    pa = pyaudio.PyAudio()
+    stream = pa.open(format=pyaudio.paInt16, channels=1, rate=16000, output=True)
+    with closing(stream):
+        stream.write(audio_bytes)
 
 def main():
     st.set_page_config(page_title='Image Uploader', page_icon=':camera:')
